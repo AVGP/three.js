@@ -18263,6 +18263,60 @@ THREE.CachingWebGLRenderer = function ( parameters ) {
 	var spritePlugin = new THREE.SpritePlugin( this, sprites );
 	var lensFlarePlugin = new THREE.LensFlarePlugin( this, lensFlares );
 
+	// Cache helpers
+	var _isTextureUsed = function( imgUrl ) {
+		for( var object in _webglObjects ) {
+			if( !_webglObjects.hasOwnProperty( object ) ) continue;
+			var objectStruct = _webglObjects[object];
+			for( var i = 0; i < objectStruct.length; i++ ) {
+				var node = objectStruct[i].object;
+				if( node.material ) {
+					// if the texture is used in this material, return true
+					if(   ( node.material.map && node.material.map.sourceFile == imgUrl )
+						|| ( node.material.lightMap && node.material.lightMap.sourceFile == imgUrl )
+						|| ( node.material.specularMap && node.material.specularMap.sourceFile == imgUrl )
+						|| ( node.material.alphaMap && node.material.alphaMap.sourceFile == imgUrl )
+						|| ( node.material.normalMap && node.material.normalMap.sourceFile == imgUrl )
+					) {
+						return true;
+					}
+				}
+
+				if( node.materials ) {
+					var materials = node.materials;
+					for( var i=0, len=materials.length; i<len; i++ ) {
+						// is this material using the texture?
+						if(  ( materials[i].map && materials[i].map.sourceFile == imgUrl )
+							|| ( materials[i].lightMap && materials[i].lightMap.sourceFile == imgUrl )
+							|| ( materials[i].specularMap && materials[i].specularMap.sourceFile == imgUrl )
+							|| ( materials[i].alphaMap && materials[i].alphaMap.sourceFile == imgUrl )
+							|| ( materials[i].normalMap && materials[i].normalMap.sourceFile == imgUrl )
+						) {
+							return true;
+						}
+					}
+				}
+
+				if( node.material && node.material.materials ) {
+					var materials = node.material.materials;
+					for( var i=0, len=materials.length; i<len; i++ ) {
+						// is this material using the texture?
+						if(  ( materials[i].map && materials[i].map.sourceFile == imgUrl )
+							|| ( materials[i].lightMap && materials[i].lightMap.sourceFile == imgUrl )
+							|| ( materials[i].specularMap && materials[i].specularMap.sourceFile == imgUrl )
+							|| ( materials[i].alphaMap && materials[i].alphaMap.sourceFile == imgUrl )
+							|| ( materials[i].normalMap && materials[i].normalMap.sourceFile == imgUrl )
+						) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		// neither this node, nor its children use the texture
+		return false;
+	};
+
 	// API
 
 	this.getContext = function () {
@@ -18549,66 +18603,11 @@ THREE.CachingWebGLRenderer = function ( parameters ) {
 
 	};
 
-	var _isTextureUsed = function(imgUrl) {
-		for(var object in _webglObjects) {
-			if(!_webglObjects.hasOwnProperty(object)) continue;
-			var objectStruct = _webglObjects[object];
-			for(var i = 0; i < objectStruct.length; i++) {
-				var node = objectStruct[i].object;
-				if(node.material) {
-					// if the texture is used in this material, return true
-					if(   (node.material.map && node.material.map.sourceFile == imgUrl)
-						|| (node.material.lightMap && node.material.lightMap.sourceFile == imgUrl)
-						|| (node.material.specularMap && node.material.specularMap.sourceFile == imgUrl)
-						|| (node.material.alphaMap && node.material.alphaMap.sourceFile == imgUrl)
-						|| (node.material.normalMap && node.material.normalMap.sourceFile == imgUrl)
-					) {
-						return true;
-					}
-				}
-
-				if(node.materials) {
-					var materials = node.materials;
-					for(var i=0, len=materials.length; i<len; i++) {
-						// is this material using the texture?
-						if(  (materials[i].map && materials[i].map.sourceFile == imgUrl)
-							|| (materials[i].lightMap && materials[i].lightMap.sourceFile == imgUrl)
-							|| (materials[i].specularMap && materials[i].specularMap.sourceFile == imgUrl)
-							|| (materials[i].alphaMap && materials[i].alphaMap.sourceFile == imgUrl)
-							|| (materials[i].normalMap && materials[i].normalMap.sourceFile == imgUrl)
-						) {
-							return true;
-						}
-					}
-				}
-
-				if(node.material && node.material.materials) {
-					var materials = node.material.materials;
-					for(var i=0, len=materials.length; i<len; i++) {
-						// is this material using the texture?
-						if(  (materials[i].map && materials[i].map.sourceFile == imgUrl)
-							|| (materials[i].lightMap && materials[i].lightMap.sourceFile == imgUrl)
-							|| (materials[i].specularMap && materials[i].specularMap.sourceFile == imgUrl)
-							|| (materials[i].alphaMap && materials[i].alphaMap.sourceFile == imgUrl)
-							|| (materials[i].normalMap && materials[i].normalMap.sourceFile == imgUrl)
-						) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		// neither this node, nor its children use the texture
-		return false;
-	};
-
 	var onTextureDispose = function ( event ) {
 
 		var texture = event.target;
-		console.log("Disposal: ", texture.sourceFile, _isTextureUsed(texture.sourceFile));
-		if(!_isTextureUsed(texture.sourceFile)) {
-			console.log("DISPOSE FOR REAL!");
-			//texture.removeEventListener( 'dispose', onTextureDispose );
+		if( !_isTextureUsed( texture.sourceFile ) ) {
+			texture.removeEventListener( 'dispose', onTextureDispose );
 			delete textureCache[texture.sourceFile];
 			deallocateTexture( texture );
 			_this.info.memory.textures --;
