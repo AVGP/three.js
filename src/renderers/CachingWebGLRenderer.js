@@ -710,7 +710,6 @@ THREE.CachingWebGLRenderer = function ( parameters ) {
 				if(node.material && node.material.materials) {
 					var materials = node.material.materials;
 					for(var i=0, len=materials.length; i<len; i++) {
-						//console.log("FUCK ME ", materials[i].map && materials[i].map.sourceFile);
 						// is this material using the texture?
 						if(  (materials[i].map && materials[i].map.sourceFile == imgUrl)
 							|| (materials[i].lightMap && materials[i].lightMap.sourceFile == imgUrl)
@@ -732,7 +731,6 @@ THREE.CachingWebGLRenderer = function ( parameters ) {
 
 		var texture = event.target;
 		console.log("Disposal: ", texture.sourceFile, _isTextureUsed(texture.sourceFile));
-console.log("EVT", event);
 		if(!_isTextureUsed(texture.sourceFile)) {
 			console.log("DISPOSE FOR REAL!");
 			texture.removeEventListener( 'dispose', onTextureDispose );
@@ -747,7 +745,7 @@ console.log("EVT", event);
 	var onRenderTargetDispose = function ( event ) {
 
 		var renderTarget = event.target;
-console.log("Um, what", event.target);
+
 		renderTarget.removeEventListener( 'dispose', onRenderTargetDispose );
 
 		deallocateRenderTarget( renderTarget );
@@ -5756,6 +5754,8 @@ console.log("Um, what", event.target);
 
         if(texture.sourceFile && textureCache[texture.sourceFile]) {
             texture.__webglTexture = textureCache[texture.sourceFile];
+						texture.__webglInit = true;
+						texture.needsUpdate = false;
             return;
         }
 		if ( texture.__webglInit === undefined ) {
