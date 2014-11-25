@@ -733,7 +733,7 @@ THREE.CachingWebGLRenderer = function ( parameters ) {
 		console.log("Disposal: ", texture.sourceFile, _isTextureUsed(texture.sourceFile));
 		if(!_isTextureUsed(texture.sourceFile)) {
 			console.log("DISPOSE FOR REAL!");
-			texture.removeEventListener( 'dispose', onTextureDispose );
+			//texture.removeEventListener( 'dispose', onTextureDispose );
 			delete textureCache[texture.sourceFile];
 			deallocateTexture( texture );
 			_this.info.memory.textures --;
@@ -5756,6 +5756,7 @@ THREE.CachingWebGLRenderer = function ( parameters ) {
             texture.__webglTexture = textureCache[texture.sourceFile];
 						texture.__webglInit = true;
 						texture.needsUpdate = false;
+						texture.addEventListener( 'dispose', onTextureDispose );
             return;
         }
 		if ( texture.__webglInit === undefined ) {
