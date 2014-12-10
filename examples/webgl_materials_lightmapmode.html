@@ -30,7 +30,7 @@
 		<script>
 
 			var camera, scene, renderer, stats;
-			var geometry, material, material2, mesh, mesh2;
+			var geometry, material, material2, material3, mesh, mesh2, mesh3;
 
 			function setup() {
 
@@ -42,7 +42,7 @@
 				renderer.setSize( W, H );
 				container.appendChild( renderer.domElement );
 
-				camera = new THREE.PerspectiveCamera( 50, W/H, 1, 10000 );
+				camera = new THREE.PerspectiveCamera( 75, W/H, 1, 10000 );
 				camera.position.z = 500;
 
 				scene = new THREE.Scene();
@@ -58,16 +58,21 @@
 				material2 = material.clone();
 				material2.lightMapMode = THREE.OverlayOperation;
 
+				material3 = material.clone();
+				material3.lightMapMode = THREE.AddOperation;
+
 				geometry.faceVertexUvs[1] = geometry.faceVertexUvs[0];
 
 				mesh  = new THREE.Mesh(geometry, material);
 				mesh2 = new THREE.Mesh(geometry, material2);
+				mesh3 = new THREE.Mesh(geometry, material3);
 
-				mesh.position.x  = -110;
-				mesh2.position.x =  110;
+				mesh.position.x  = -250;
+				mesh3.position.x =  250;
 
 				scene.add(mesh);
 				scene.add(mesh2);
+				scene.add(mesh3);
 
 				// Some lights
 
